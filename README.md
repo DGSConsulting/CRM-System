@@ -4,9 +4,9 @@
 >**A lightweight, modern CRM that runs entirely in your browser. No servers, no databases, no hassle - just pure contact management magic!** ✨
 
 
-Show Image(Place Holder)
+![Project Screenshot](images/Add_Contacts_CRM.png)
 
-Show Image( Place Holder)
+![Project Screenshot](images/CRM_Contacts.png)
 
 <br><br/>
 
