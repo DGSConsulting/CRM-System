@@ -402,13 +402,11 @@
         body.dark-mode .tab-content {
             background: #2c2c3e;
             color: #fff;
-            border-color: #444;
         }
 
         body.dark-mode .contact-card {
             background: #3a3a4e;
             color: #fff;
-            border-left-color: #764ba2;
         }
 
         body.dark-mode .stat-card {
@@ -495,12 +493,12 @@
         </div>
 
         <div class="nav-tabs">
-            <button class="nav-tab active" onclick="showTab('dashboard')">Dashboard</button>
-            <button class="nav-tab" onclick="showTab('contacts')">Contacts</button>
-            <button class="nav-tab" onclick="showTab('add-contact')">Add Contact</button>
-            <button class="nav-tab" onclick="showTab('tasks')">Tasks</button>
-            <button class="nav-tab" onclick="showTab('deals')">Deals</button>
-            <button class="nav-tab" onclick="showTab('analytics')">Analytics</button>
+            <button class="nav-tab active" onclick="showTab(event, 'dashboard')">Dashboard</button>
+            <button class="nav-tab" onclick="showTab(event, 'contacts')">Contacts</button>
+            <button class="nav-tab" onclick="showTab(event, 'add-contact')">Add Contact</button>
+            <button class="nav-tab" onclick="showTab(event, 'tasks')">Tasks</button>
+            <button class="nav-tab" onclick="showTab(event, 'deals')">Deals</button>
+            <button class="nav-tab" onclick="showTab(event, 'analytics')">Analytics</button>
         </div>
 
         <!-- Dashboard Tab -->
@@ -545,9 +543,9 @@
             <div class="form-section">
                 <h3>Quick Actions</h3>
                 <div class="filters-container">
-                    <button class="btn" onclick="showTab('add-contact')">Add Contact</button>
-                    <button class="btn btn-secondary" onclick="showTab('tasks')">Add Task</button>
-                    <button class="btn btn-success" onclick="showTab('deals')">Create Deal</button>
+                    <button class="btn" onclick="showTab(event, 'add-contact')">Add Contact</button>
+                    <button class="btn btn-secondary" onclick="showTab(event, 'tasks')">Add Task</button>
+                    <button class="btn btn-success" onclick="showTab(event, 'deals')">Create Deal</button>
                     <button class="btn btn-warning" onclick="exportData()">Export Data</button>
                 </div>
             </div>
@@ -583,7 +581,7 @@
                 <div class="empty-state">
                     <h3>No contacts yet</h3>
                     <p>Add your first contact to get started!</p>
-                    <button class="btn" onclick="showTab('add-contact')">Add Contact</button>
+                    <button class="btn" onclick="showTab(event, 'add-contact')">Add Contact</button>
                 </div>
             </div>
         </div>
@@ -833,12 +831,12 @@
 
     <script>
         // Data storage
-        let contacts = JSON.parse(localStorage.getItem('crmContacts') || '[]');
-        let tasks = JSON.parse(localStorage.getItem('crmTasks') || '[]');
-        let deals = JSON.parse(localStorage.getItem('crmDeals') || '[]');
-        let currentContactId = parseInt(localStorage.getItem('crmContactId') || '1');
-        let currentTaskId = parseInt(localStorage.getItem('crmTaskId') || '1');
-        let currentDealId = parseInt(localStorage.getItem('crmDealId') || '1');
+        let contacts = [];
+        let tasks = [];
+        let deals = [];
+        let currentContactId = 1;
+        let currentTaskId = 1;
+        let currentDealId = 1;
 
         // Initialize app
         document.addEventListener('DOMContentLoaded', function() {
@@ -849,10 +847,15 @@
             updateDealsDisplay();
             updateAnalytics();
             populateContactSelects();
+            
+            // Load dark mode preference
+            if (localStorage.getItem('crmDarkMode') === 'true') {
+                document.body.classList.add('dark-mode');
+            }
         });
 
         // Tab management
-        function showTab(tabName) {
+        function showTab(event, tabName) {
             // Hide all tab contents
             const tabs = document.querySelectorAll('.tab-content');
             tabs.forEach(tab => tab.classList.remove('active'));
@@ -865,7 +868,9 @@
             document.getElementById(tabName).classList.add('active');
             
             // Add active class to clicked nav tab
-            event.target.classList.add('active');
+            if (event && event.target) {
+                event.target.classList.add('active');
+            }
             
             // Update displays when switching to certain tabs
             if (tabName === 'contacts') {
@@ -913,7 +918,7 @@
             showNotification('Contact added successfully!', 'success');
             
             // Switch to contacts tab
-            showTab('contacts');
+            showTab({ target: document.querySelector('.nav-tab[onclick*="contacts"]') }, 'contacts');
         });
 
         // Task management
@@ -971,21 +976,36 @@
 
         // Data persistence
         function saveData() {
-            localStorage.setItem('crmContacts', JSON.stringify(contacts));
-            localStorage.setItem('crmTasks', JSON.stringify(tasks));
-            localStorage.setItem('crmDeals', JSON.stringify(deals));
-            localStorage.setItem('crmContactId', currentContactId.toString());
-            localStorage.setItem('crmTaskId', currentTaskId.toString());
-            localStorage.setItem('crmDealId', currentDealId.toString());
+            try {
+                localStorage.setItem('crmContacts', JSON.stringify(contacts));
+                localStorage.setItem('crmTasks', JSON.stringify(tasks));
+                localStorage.setItem('crmDeals', JSON.stringify(deals));
+                localStorage.setItem('crmContactId', currentContactId.toString());
+                localStorage.setItem('crmTaskId', currentTaskId.toString());
+                localStorage.setItem('crmDealId', currentDealId.toString());
+            } catch (error) {
+                console.error('Error saving data:', error);
+                showNotification('Error saving data. Storage may be full.', 'error');
+            }
         }
 
         function loadData() {
-            contacts = JSON.parse(localStorage.getItem('crmContacts') || '[]');
-            tasks = JSON.parse(localStorage.getItem('crmTasks') || '[]');
-            deals = JSON.parse(localStorage.getItem('crmDeals') || '[]');
-            currentContactId = parseInt(localStorage.getItem('crmContactId') || '1');
-            currentTaskId = parseInt(localStorage.getItem('crmTaskId') || '1');
-            currentDealId = parseInt(localStorage.getItem('crmDealId') || '1');
+            try {
+                contacts = JSON.parse(localStorage.getItem('crmContacts') || '[]');
+                tasks = JSON.parse(localStorage.getItem('crmTasks') || '[]');
+                deals = JSON.parse(localStorage.getItem('crmDeals') || '[]');
+                currentContactId = parseInt(localStorage.getItem('crmContactId') || '1');
+                currentTaskId = parseInt(localStorage.getItem('crmTaskId') || '1');
+                currentDealId = parseInt(localStorage.getItem('crmDealId') || '1');
+            } catch (error) {
+                console.error('Error loading data:', error);
+                contacts = [];
+                tasks = [];
+                deals = [];
+                currentContactId = 1;
+                currentTaskId = 1;
+                currentDealId = 1;
+            }
         }
 
         // Dashboard updates
@@ -1075,7 +1095,7 @@
                     contact.firstName.toLowerCase().includes(searchTerm) ||
                     contact.lastName.toLowerCase().includes(searchTerm) ||
                     contact.email.toLowerCase().includes(searchTerm) ||
-                    contact.company.toLowerCase().includes(searchTerm)
+                    (contact.company && contact.company.toLowerCase().includes(searchTerm))
                 );
             }
             
@@ -1088,7 +1108,7 @@
                     <div class="empty-state">
                         <h3>No contacts found</h3>
                         <p>Try adjusting your search or filters</p>
-                        <button class="btn" onclick="showTab('add-contact')">Add Contact</button>
+                        <button class="btn" onclick="showTab(event, 'add-contact')">Add Contact</button>
                     </div>
                 `;
                 return;
@@ -1342,7 +1362,7 @@
             saveData();
             
             // Switch to add contact tab
-            showTab('add-contact');
+            showTab({ target: document.querySelector('.nav-tab[onclick*="add-contact"]') }, 'add-contact');
             showNotification('Contact loaded for editing', 'success');
         }
 
@@ -1362,7 +1382,7 @@
             if (!contact) return;
             
             // Pre-select the contact in task form
-            showTab('tasks');
+            showTab({ target: document.querySelector('.nav-tab[onclick*="tasks"]') }, 'tasks');
             setTimeout(() => {
                 document.getElementById('task-contact').value = contactId;
                 document.getElementById('task-title').value = `Follow up with ${contact.firstName} ${contact.lastName}`;
@@ -1486,8 +1506,6 @@
             localStorage.setItem('crmDarkMode', isDark);
             showNotification(`${isDark ? 'Dark' : 'Light'} mode enabled!`, 'success');
         }
-
-        // Load dark mode preference
-        if (localStorage.getItem('crmDarkMode') === 'true') {
-            document.body.classList.add('dark-mode');
-        }
+    </script>
+</body>
+</html>
